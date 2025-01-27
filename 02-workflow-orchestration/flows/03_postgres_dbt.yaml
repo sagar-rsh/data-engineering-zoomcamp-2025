@@ -39,7 +39,7 @@ tasks:
         outputs:
           dev:
             type: postgres
-            host: 172.21.0.4
+            host: postgres-db
             user: root
             password: root
             port: 5432
