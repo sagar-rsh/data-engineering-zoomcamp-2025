@@ -1,14 +1,8 @@
-volumes:
-  postgres-data:
-    driver: local
-  kestra-data:
-    driver: local
-
 services:
-  postgres:
+  kestra-metadata:
     image: postgres
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - vol-kestra_metadata:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: kestra
       POSTGRES_USER: kestra
@@ -25,14 +19,14 @@ services:
     user: 'root'
     command: server standalone
     volumes:
-      - kestra-data:/app/storage
+      - vol-kestra_data:/app/storage
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/kestra-wd:/tmp/kestra-wd
     environment:
       KESTRA_CONFIGURATION: |
         datasources:
           postgres:
-            url: jdbc:postgresql://postgres:5432/kestra
+            url: jdbc:postgresql://kestra-metadata:5432/kestra
             driverClassName: org.postgresql.Driver
             username: kestra
             password: k3str4
@@ -58,5 +52,53 @@ services:
       - '8080:8080'
       - '8081:8081'
     depends_on:
-      postgres:
+      kestra-metadata:
         condition: service_started
+
+  postgres:
+    image: postgres
+    container_name: postgres-db
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=ny_taxi
+    ports:
+      - '5432:5432'
+    volumes:
+      - vol-postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      kestra:
+        condition: service_started
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 'pgadmin@pgadmin.com'
+      PGADMIN_DEFAULT_PASSWORD: 'pgadmin'
+    ports:
+      - '9000:80'
+    volumes:
+      - vol-pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'curl --fail http://localhost:80/ || exit 1']
+      start_period: 10s
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  vol-kestra_metadata:
+    driver: local
+  vol-kestra_data:
+    driver: local
+  vol-postgres_data:
+  vol-pgadmin_data:
