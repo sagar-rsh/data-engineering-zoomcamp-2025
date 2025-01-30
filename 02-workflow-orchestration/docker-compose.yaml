@@ -87,7 +87,7 @@ services:
       - vol-pgadmin_data:/var/lib/pgadmin
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ['CMD-SHELL', 'curl --fail http://localhost:80/ || exit 1']
       start_period: 10s
