@@ -4,6 +4,7 @@ data_pgadmin/
 *.csv
 *.csv.gz
 *.json
+*.parquet
 
 # Local .terraform directories
 **/.terraform/*
