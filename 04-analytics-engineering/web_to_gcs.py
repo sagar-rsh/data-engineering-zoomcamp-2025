@@ -49,10 +49,10 @@ def web_to_gcs(year, service):
         print(f"Local: {file_name}")
 
         # read it back into a parquet file
-        df = pd.read_csv(file_name, compression='gzip')
-        file_name = file_name.replace('.csv.gz', '.parquet')
-        df.to_parquet(file_name, engine='pyarrow')
-        print(f"Parquet: {file_name}")
+        # df = pd.read_csv(file_name, compression='gzip')
+        # file_name = file_name.replace('.csv.gz', '.parquet')
+        # df.to_parquet(file_name, engine='pyarrow')
+        # print(f"Parquet: {file_name}")
 
         # upload it to gcs 
         upload_to_gcs(BUCKET, f"{service}/{file_name}", file_name)
@@ -61,5 +61,6 @@ def web_to_gcs(year, service):
 
 # web_to_gcs('2019', 'green')
 # web_to_gcs('2020', 'green')
-web_to_gcs('2019', 'yellow')
-web_to_gcs('2020', 'yellow')
+# web_to_gcs('2019', 'yellow')
+# web_to_gcs('2020', 'yellow')
+web_to_gcs('2019', 'fhv')
