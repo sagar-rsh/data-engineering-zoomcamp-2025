@@ -168,6 +168,19 @@ Considering the YoY Growth in 2020, which were the yearly quarters with the best
 - green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q1, worst: 2020/Q2}
 - green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q3, worst: 2020/Q4}
 
+```sql
+WITH ranked_growth AS (
+    SELECT *, 
+           ROW_NUMBER() OVER (PARTITION BY service_type ORDER BY yoy_growth ASC) AS min_yoy_growth,
+           ROW_NUMBER() OVER (PARTITION BY service_type ORDER BY yoy_growth DESC) AS max_yoy_growth
+    FROM de-zoomcamp-450419.dbt_sp.fct_taxi_trips_quarterly_revenue
+    WHERE yoy_growth IS NOT NULL
+)
+SELECT * FROM ranked_growth WHERE min_yoy_growth = 1 OR max_yoy_growth = 1;
+```
+
+Answer: `green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q1, worst: 2020/Q2}`
+
 ### Question 6: P97/P95/P90 Taxi Monthly Fare
 
 1. Create a new model `fct_taxi_trips_monthly_fare_p95.sql`
@@ -181,6 +194,18 @@ Now, what are the values of `p97`, `p95`, `p90` for Green Taxi and Yellow Taxi, 
 - green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 52.0, p95: 37.0, p90: 25.5}
 - green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}
 - green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 25.5, p90: 19.0}
+
+```sql
+SELECT 
+    DISTINCT service_type, year, month, p97, p95, p90
+FROM 
+    `de-zoomcamp-450419.dbt_sp.fct_taxi_trips_monthly_fare_p95`
+WHERE 
+    service_type IN ('Green', 'Yellow')
+    AND year = 2020 
+    AND month = 4;
+```
+Answer: `green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}`
 
 ### Question 7: Top #Nth longest P90 travel time Location for FHV
 
@@ -203,6 +228,23 @@ For the Trips that **respectively** started from `Newark Airport`, `SoHo`, and `
 - LaGuardia Airport, Saint Albans, Howard Beach
 - LaGuardia Airport, Rosedale, Bath Beach
 - LaGuardia Airport, Yorkville East, Greenpoint
+
+```sql
+WITH ranked_trips AS (
+  SELECT
+    dropoff_zone,
+    DENSE_RANK() OVER (PARTITION BY pickup_zone ORDER BY p90 DESC) AS drank
+  FROM
+    de-zoomcamp-450419.dbt_sp.fct_fhv_monthly_zone_traveltime_p90
+  WHERE
+    pickup_zone IN ('Newark Airport', 'SoHo', 'Yorkville East')
+    AND YEAR = 2019 AND MONTH = 11
+)
+SELECT DISTINCT dropoff_zone FROM ranked_trips
+WHERE drank = 2
+```
+
+Answer: `LaGuardia Airport, Chinatown, Garment District`
 
 ## Submitting the solutions
 
